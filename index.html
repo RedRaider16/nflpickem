@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Sunday Pick 'Em — Live Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #16241C;
+    --surface: #1F3327;
+    --surface-alt: #24392C;
+    --line: #3A4F3E;
+    --ink: #F3EFE2;
+    --ink-dim: #B9C4B7;
+    --gold: #C9A227;
+    --rust: #A8462F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+  }
+
+  h1, h2, .display {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  .marquee {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--gold);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 36px;
+  }
+
+  .marquee .eyebrow {
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+    margin: 0 0 6px;
+  }
+
+  .marquee .leader-name {
+    font-size: 2.1rem;
+    margin: 0;
+  }
+
+  .marquee .leader-points {
+    color: var(--gold);
+    font-size: 2.1rem;
+  }
+
+  .marquee .pot-note {
+    color: var(--ink-dim);
+    margin-top: 8px;
+    font-size: 0.95rem;
+  }
+
+  section { margin-bottom: 44px; }
+
+  section > h2 {
+    font-size: 1.3rem;
+    margin: 0 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  #standings-table th, #standings-table td {
+    text-align: left;
+    padding: 9px 12px;
+  }
+
+  #standings-table tr:nth-child(odd) td { background: var(--surface); }
+  #standings-table tr:nth-child(even) td { background: var(--surface-alt); }
+  #standings-table th {
+    color: var(--ink-dim);
+    font-weight: 500;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  #standings-table .rank-1 td:first-child { color: var(--gold); font-weight: 600; }
+
+  .grid-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+
+  #grid-table { min-width: 720px; }
+
+  #grid-table th, #grid-table td {
+    padding: 8px 10px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+  }
+
+  #grid-table thead th {
+    background: var(--surface-alt);
+    color: var(--ink-dim);
+    font-weight: 500;
+    font-size: 0.78rem;
+    position: sticky;
+    top: 0;
+  }
+
+  #grid-table td:first-child, #grid-table th:first-child {
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    font-weight: 500;
+  }
+
+  .actual-final { color: var(--ink); }
+  .actual-pending { color: var(--ink-dim); font-style: italic; }
+  .pick-correct { color: var(--gold); }
+  .pick-wrong { color: var(--rust); }
+
+  .refresh-note {
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+
+  .empty-state {
+    color: var(--ink-dim);
+    font-style: italic;
+    padding: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="marquee">
+    <p class="eyebrow">Current leader</p>
+    <h1 class="leader-name" id="leader-name">Loading...</h1>
+    <div class="leader-points" id="leader-points"></div>
+    <p class="pot-note" id="pot-note"></p>
+  </div>
+
+  <section>
+    <h2>Standings</h2>
+    <table id="standings-table">
+      <thead>
+        <tr><th>Rank</th><th>Name</th><th>Points</th></tr>
+      </thead>
+      <tbody id="standings-body">
+        <tr><td colspan="3" class="empty-state">Loading standings...</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Everyone's picks</h2>
+    <div class="grid-scroll">
+      <table id="grid-table">
+        <thead id="grid-head"></thead>
+        <tbody id="grid-body">
+          <tr><td class="empty-state">Loading picks...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="refresh-note">Updates automatically as games finish — refreshes every 60 seconds.</p>
+  </section>
+
+</div>
+
+<script>
+  // --- Fill these in after publishing the Standings and PicksGrid tabs ---
+  // Google Sheet > File > Share > Publish to web > choose the tab > CSV.
+  const STANDINGS_CSV_URL = 'PASTE_STANDINGS_PUBLISHED_CSV_URL_HERE';
+  const PICKS_GRID_CSV_URL = 'PASTE_PICKSGRID_PUBLISHED_CSV_URL_HERE';
+  // ------------------------------------------------------------------
+
+  function parseCsv(text) {
+    return text.trim().split('\n').map(function (line) {
+      const cells = [];
+      let cur = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { inQuotes = !inQuotes; }
+        else if (ch === ',' && !inQuotes) { cells.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+      cells.push(cur);
+      return cells.map(function (c) { return c.replace(/^"|"$/g, '').trim(); });
+    });
+  }
+
+  async function loadStandings() {
+    try {
+      const res = await fetch(STANDINGS_CSV_URL, { cache: 'no-store' });
+      const rows = parseCsv(await res.text());
+      const header = rows[0];
+      const potNote = header[3] || '';
+      const splitNote = header[4] || '';
+      const body = rows.slice(1).filter(function (r) { return r[1]; });
+
+      document.getElementById('pot-note').textContent = [potNote, splitNote].filter(Boolean).join(' — ');
+
+      if (body.length) {
+        const leader = body[0];
+        document.getElementById('leader-name').textContent = leader[1];
+        document.getElementById('leader-points').textContent = leader[2] + ' pts';
+      }
+
+      const tbody = document.getElementById('standings-body');
+      tbody.innerHTML = '';
+      body.forEach(function (r) {
+        const tr = document.createElement('tr');
+        if (r[0] === '1') tr.classList.add('rank-1');
+        tr.innerHTML = '<td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td>';
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      document.getElementById('standings-body').innerHTML =
+        '<tr><td colspan="3" class="empty-state">Couldn\'t load standings yet.</td></tr>';
+    }
+  }
+
+  async function loadPicksGrid() {
+    try {
+      const res = await fetch(PICKS_GRID_CSV_URL, { cache: 'no-store' });
+      const rows = parseCsv(await res.text());
+      const header = rows[0];
+      const body = rows.slice(1).filter(function (r) { return r[0]; });
+
+      const thead = document.getElementById('grid-head');
+      const headRow = document.createElement('tr');
+      header.forEach(function (h) {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headRow.appendChild(th);
+      });
+      thead.innerHTML = '';
+      thead.appendChild(headRow);
+
+      const tbody = document.getElementById('grid-body');
+      tbody.innerHTML = '';
+      body.forEach(function (r) {
+        const tr = document.createElement('tr');
+        r.forEach(function (cell, i) {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          // Every 3rd+4th column starting at index 4 is an "Actual" column.
+          if (i >= 4 && (i - 2) % 3 === 0) {
+            td.classList.add(cell.includes('(') ? 'actual-final' : 'actual-pending');
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      document.getElementById('grid-body').innerHTML =
+        '<tr><td class="empty-state">Couldn\'t load picks yet.</td></tr>';
+    }
+  }
+
+  function refreshAll() {
+    loadStandings();
+    loadPicksGrid();
+  }
+
+  refreshAll();
+  setInterval(refreshAll, 60000);
+</script>
+</body>
+</html>
