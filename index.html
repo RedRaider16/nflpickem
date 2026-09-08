@@ -529,7 +529,7 @@
 
       document.getElementById('closest-name').textContent = kv.ClosestPredictorNames || '—';
       document.getElementById('closest-sub').textContent =
-        kv.ClosestPredictorPoints != null ? (kv.ClosestPredictorPoints + ' / ' + kv.ClosestPredictorMax + ' precision points') : '';
+        (kv.ClosestPredictorPoints && kv.ClosestPredictorPoints !== '') ? (kv.ClosestPredictorPoints + ' / ' + kv.ClosestPredictorMax + ' precision points') : '';
 
       if (kv.BiggestUpsetTeam) {
         document.getElementById('upset-name').textContent = kv.BiggestUpsetTeam + ' (' + kv.BiggestUpsetOdds + ')';
