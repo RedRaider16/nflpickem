@@ -188,11 +188,8 @@
 </div>
 
 <script>
-  // --- Fill these in after publishing the Standings and PicksGrid tabs ---
-  // Google Sheet > File > Share > Publish to web > choose the tab > CSV.
-  const STANDINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTS5I8q8HKZ2nA3UFV8Xd7wcBdkjYvvjXXJbWYvWd0KJM8VUZ1Kh4A4gqZDl9uGxCZ0IN56H00PhunP/pubhtml?gid=377914368&single=true';
-  const PICKS_GRID_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTS5I8q8HKZ2nA3UFV8Xd7wcBdkjYvvjXXJbWYvWd0KJM8VUZ1Kh4A4gqZDl9uGxCZ0IN56H00PhunP/pubhtml?gid=123174537&single=true';
-  // ------------------------------------------------------------------
+  const STANDINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTS5I8q8HKZ2nA3UFV8Xd7wcBdkjYvvjXXJbWYvWd0KJM8VUZ1Kh4A4gqZDl9uGxCZ0IN56H00PhunP/pub?gid=377914368&single=true&output=csv';
+  const PICKS_GRID_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTS5I8q8HKZ2nA3UFV8Xd7wcBdkjYvvjXXJbWYvWd0KJM8VUZ1Kh4A4gqZDl9uGxCZ0IN56H00PhunP/pub?gid=123174537&single=true&output=csv';
 
   function parseCsv(text) {
     return text.trim().split('\n').map(function (line) {
@@ -264,7 +261,6 @@
         r.forEach(function (cell, i) {
           const td = document.createElement('td');
           td.textContent = cell;
-          // Every 3rd+4th column starting at index 4 is an "Actual" column.
           if (i >= 4 && (i - 2) % 3 === 0) {
             td.classList.add(cell.includes('(') ? 'actual-final' : 'actual-pending');
           }
