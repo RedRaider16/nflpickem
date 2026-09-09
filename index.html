@@ -541,6 +541,8 @@
     }
   }
 
+  let firstKickoffTime = null;
+
   async function loadInsights() {
     try {
       const rows = await fetchCsv(INSIGHTS_CSV_URL);
@@ -557,6 +559,8 @@
           kv.BonusEligibleWeeksRequired + ' of ' + kv.TotalSeasonWeeks + ' weeks.';
       }
 
+      firstKickoffTime = kv.FirstKickoff ? new Date(kv.FirstKickoff) : null;
+
       if (kv.BiggestUpsetTeam) {
         document.getElementById('upset-name').textContent = kv.BiggestUpsetTeam + ' (' + kv.BiggestUpsetOdds + ')';
         document.getElementById('upset-sub').textContent =
@@ -572,6 +576,14 @@
   }
 
   async function loadPicksGrid() {
+    if (firstKickoffTime && new Date() < firstKickoffTime) {
+      const lockedMsg = '<p class="empty-state">Picks are hidden until kickoff (' +
+        firstKickoffTime.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) +
+        ') — check back after the first game starts.</p>';
+      document.getElementById('grid-body').innerHTML = '<tr><td class="empty-state">' + lockedMsg.replace(/<\/?p[^>]*>/g, '') + '</td></tr>';
+      document.getElementById('picks-cards').innerHTML = lockedMsg;
+      return;
+    }
     try {
       const rows = await fetchCsv(PICKS_GRID_CSV_URL);
       const header = rows[0];
@@ -638,10 +650,8 @@
     skeletonRows('season-body', 6, 3);
   }
 
-  function refreshAll() {
-    loadStandings();
-    loadSeasonStandings();
-    loadInsights();
+  async function refreshAll() {
+    await Promise.all([loadStandings(), loadSeasonStandings(), loadInsights()]);
     loadPicksGrid();
   }
 
