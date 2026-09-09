@@ -400,8 +400,9 @@
       Season standings
       <span class="bar"></span>
     </h2>
+    <p class="callout-sub" id="bonus-pool-note" style="margin-bottom:12px;"></p>
     <table class="std-table" id="season-table">
-      <thead><tr><th>Rank</th><th>Name</th><th>Points</th><th>W-L</th></tr></thead>
+      <thead><tr><th>Rank</th><th>Name</th><th>Points</th><th>W-L</th><th>Weeks</th><th>Bonus</th></tr></thead>
       <tbody id="season-body"></tbody>
     </table>
   </section>
@@ -510,14 +511,33 @@
     }
   }
 
+  function renderSeasonTable(rows) {
+    const tbody = document.getElementById('season-body');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No entries yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    rows.forEach(function (r) {
+      const tr = document.createElement('tr');
+      const wl = (r[3] || '0') + '-' + (r[4] || '0');
+      const eligible = r[6] === 'Yes';
+      const bonusHtml = eligible
+        ? '<span style="color: var(--gold-bright); font-weight:600;">' + r[6] + '</span>'
+        : '<span style="color: var(--ink-dim);">' + r[6] + '</span>';
+      tr.innerHTML = '<td>' + rankBadge(r[0]) + '</td><td class="name-cell">' + r[1] + '</td><td>' + r[2] + '</td><td>' + wl + '</td><td>' + r[5] + '</td><td>' + bonusHtml + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
   async function loadSeasonStandings() {
     try {
       const rows = await fetchCsv(SEASON_CSV_URL);
       const body = rows.slice(1).filter(function (r) { return r[1]; });
-      renderStandingsTable('season-body', body, false);
+      renderSeasonTable(body);
     } catch (e) {
       document.getElementById('season-body').innerHTML =
-        '<tr><td colspan="4" class="empty-state">Couldn\'t load season standings yet.</td></tr>';
+        '<tr><td colspan="6" class="empty-state">Couldn\'t load season standings yet.</td></tr>';
     }
   }
 
@@ -530,6 +550,12 @@
       document.getElementById('closest-name').textContent = kv.ClosestPredictorNames || '—';
       document.getElementById('closest-sub').textContent =
         (kv.ClosestPredictorPoints && kv.ClosestPredictorPoints !== '') ? (kv.ClosestPredictorPoints + ' / ' + kv.ClosestPredictorMax + ' precision points') : '';
+
+      if (kv.SeasonBonusPool) {
+        document.getElementById('bonus-pool-note').textContent =
+          'Season bonus pool: $' + kv.SeasonBonusPool + ' — split among the top 3 season scorers who play at least ' +
+          kv.BonusEligibleWeeksRequired + ' of ' + kv.TotalSeasonWeeks + ' weeks.';
+      }
 
       if (kv.BiggestUpsetTeam) {
         document.getElementById('upset-name').textContent = kv.BiggestUpsetTeam + ' (' + kv.BiggestUpsetOdds + ')';
@@ -609,7 +635,7 @@
 
   function showSkeletons() {
     skeletonRows('standings-body', 4, 3);
-    skeletonRows('season-body', 4, 3);
+    skeletonRows('season-body', 6, 3);
   }
 
   function refreshAll() {
