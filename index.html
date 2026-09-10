@@ -396,9 +396,10 @@
   const SEASON_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTS5I8q8HKZ2nA3UFV8Xd7wcBdkjYvvjXXJbWYvWd0KJM8VUZ1Kh4A4gqZDl9uGxCZ0IN56H00PhunP/pub?gid=1373114026&single=true&output=csv';
   const INSIGHTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTS5I8q8HKZ2nA3UFV8Xd7wcBdkjYvvjXXJbWYvWd0KJM8VUZ1Kh4A4gqZDl9uGxCZ0IN56H00PhunP/pub?gid=524816719&single=true&output=csv';
   // GameResults — same publishing pattern. Paste its CSV link here too.
-  const GAME_RESULTS_CSV_URL = 'PASTE_GAMERESULTS_PUBLISHED_CSV_URL_HERE';
+  const GAME_RESULTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTS5I8q8HKZ2nA3UFV8Xd7wcBdkjYvvjXXJbWYvWd0KJM8VUZ1Kh4A4gqZDl9uGxCZ0IN56H00PhunP/pub?gid=1759910474&single=true&output=csv';
 
   let firstKickoffTime = null;
+  let firstGameComplete = false;
 
   // Proper CSV parser — walks the whole text char by char so a quoted
   // field containing commas or line breaks (like the rules text) doesn't
@@ -471,7 +472,7 @@
       tbody.appendChild(tr);
     });
 
-    if (includeLeader && rows.length) {
+    if (includeLeader && rows.length && firstGameComplete) {
       document.getElementById('leader-name').textContent = rows[0][1];
       document.getElementById('leader-points').textContent = rows[0][2] + ' pts';
       document.getElementById('leader-card').style.display = 'block';
@@ -533,9 +534,16 @@
       const kv = {};
       rows.slice(1).forEach(function (r) { kv[r[0]] = r[1]; });
 
-      document.getElementById('closest-name').textContent = kv.ClosestPredictorNames || '—';
-      document.getElementById('closest-sub').textContent =
-        (kv.ClosestPredictorPoints && kv.ClosestPredictorPoints !== '') ? (kv.ClosestPredictorPoints + ' / ' + kv.ClosestPredictorMax + ' precision points') : '';
+      firstGameComplete = kv.FirstGameComplete === 'true';
+
+      if (firstGameComplete) {
+        document.getElementById('closest-name').textContent = kv.ClosestPredictorNames || '—';
+        document.getElementById('closest-sub').textContent =
+          (kv.ClosestPredictorPoints && kv.ClosestPredictorPoints !== '') ? (kv.ClosestPredictorPoints + ' / ' + kv.ClosestPredictorMax + ' precision points') : '';
+      } else {
+        document.getElementById('closest-name').textContent = '—';
+        document.getElementById('closest-sub').textContent = 'Available once the first game finishes.';
+      }
 
       if (kv.SeasonBonusPool) {
         document.getElementById('bonus-pool-note').textContent =
@@ -705,7 +713,8 @@
   }
 
   async function refreshAll() {
-    await Promise.all([loadStandings(), loadSeasonStandings(), loadInsights()]);
+    await loadInsights();
+    await Promise.all([loadStandings(), loadSeasonStandings()]);
     loadPicksGrid();
     loadGames();
   }
