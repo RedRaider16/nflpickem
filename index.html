@@ -224,6 +224,8 @@
   }
   .pick-game .matchup { color: var(--ink-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pick-game .pick-val { text-align: right; white-space: nowrap; }
+  .pick-val .pick-correct { color: var(--gold-bright); font-weight: 700; }
+  .pick-val .pick-wrong { color: var(--ink); }
   .points-badge {
     display: inline-block; min-width: 28px; text-align: center;
     padding: 1px 7px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
@@ -575,8 +577,10 @@
           const actual = r[i + 2] || '';
           const points = r[i + 3];
           const isFinal = actual.includes('(');
+          const winnerTeam = isFinal ? actual.substring(0, actual.lastIndexOf(' (')) : null;
+          const pickClass = isFinal ? (pick === winnerTeam ? 'pick-correct' : 'pick-wrong') : '';
           html += '<div class="pick-game"><span class="matchup" title="' + label + '">' + label + '</span>' +
-            '<span class="pick-val">' + pick + ' (' + predicted + ')' + pointsBadge(points, isFinal) + '</span></div>';
+            '<span class="pick-val"><span class="' + pickClass + '">' + pick + '</span> (' + predicted + ')' + pointsBadge(points, isFinal) + '</span></div>';
         }
         card.innerHTML = html;
         wrap.appendChild(card);
