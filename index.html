@@ -6,6 +6,18 @@
 <title>NFL Pick 'Em 2026 — Live Leaderboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  // Thanksgiving theme runs automatically Tue Nov 24 -> Mon Nov 30, 2026 (Central time).
+  // Preview any time with ?theme=thanksgiving ; force normal look with ?theme=default
+  (function () {
+    var start = new Date('2026-11-24T00:00:00-06:00');
+    var end = new Date('2026-12-01T00:00:00-06:00');
+    var now = new Date();
+    var q = new URLSearchParams(location.search).get('theme');
+    var on = q === 'thanksgiving' || (q !== 'default' && now >= start && now < end);
+    if (on) document.documentElement.setAttribute('data-theme', 'thanksgiving');
+  })();
+</script>
 <style>
   :root {
     --bg-1: #080C18;
@@ -276,6 +288,69 @@
   .rules-text { white-space: pre-wrap; font-size: 0.92rem; color: var(--ink-dim); line-height: 1.7; }
 
   footer { text-align: center; color: var(--ink-dim); font-size: 0.8rem; margin-top: 50px; opacity: 0.7; }
+
+  /* ===== Thanksgiving theme (auto-activates by date, see theme script in <head>) ===== */
+  html[data-theme="thanksgiving"] {
+    --bg-1: #1A0D07;
+    --bg-2: #2A1509;
+    --surface: #3A2012;
+    --surface-alt: #46281A;
+    --surface-hover: #55321F;
+    --line: #6B4228;
+    --ink: #FBF1DE;
+    --ink-dim: #C9A98A;
+    --gold: #E8892B;
+    --gold-bright: #FFB04D;
+    --gold-deep: #A8561A;
+    --maroon: #9B2335;
+    --maroon-bright: #E86A5A;
+  }
+  html[data-theme="thanksgiving"] body {
+    background:
+      radial-gradient(ellipse 1000px 600px at 50% -15%, rgba(232,137,43,0.22), transparent 60%),
+      radial-gradient(ellipse 700px 400px at 100% 30%, rgba(155,35,53,0.16), transparent 60%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    background-attachment: fixed;
+  }
+  html[data-theme="thanksgiving"] .nav-bar { background: rgba(26, 13, 7, 0.92); }
+  html[data-theme="thanksgiving"] .header-banner::before { background: radial-gradient(ellipse, rgba(232,137,43,0.35), transparent 70%); }
+  html[data-theme="thanksgiving"] .game-card.is-live { box-shadow: 0 0 0 1px rgba(232,137,43,0.4); }
+  html[data-theme="thanksgiving"] .star-divider svg { fill: #FFB04D; }
+
+  .holiday-banner { display: none; }
+  html[data-theme="thanksgiving"] .holiday-banner {
+    display: block;
+    text-align: center;
+    margin: 14px 0 0;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--gold-deep);
+    background: linear-gradient(90deg, rgba(155,35,53,0.35), rgba(232,137,43,0.28), rgba(155,35,53,0.35));
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    color: var(--gold-bright);
+  }
+  .holiday-banner small { display: block; font-family: 'Inter', sans-serif; font-size: 0.8rem; letter-spacing: 0; color: var(--ink-dim); margin-top: 2px; }
+
+  .leaf-layer { display: none; }
+  html[data-theme="thanksgiving"] .leaf-layer {
+    display: block; position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5;
+  }
+  .leaf-layer span {
+    position: absolute; top: -40px; font-size: 22px; opacity: 0.8;
+    animation: leafFall linear infinite;
+  }
+  @keyframes leafFall {
+    0%   { transform: translate3d(0, -40px, 0) rotate(0deg); }
+    50%  { transform: translate3d(40px, 50vh, 0) rotate(180deg); }
+    100% { transform: translate3d(-20px, 105vh, 0) rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .leaf-layer { display: none !important; } }
+
+  /* live / awaiting-final labels on picks */
+  .points-badge.live { background: rgba(240,204,92,0.14); color: var(--gold-bright); font-weight: 600; font-style: normal; }
+  .points-badge.awaiting { background: transparent; color: var(--gold-bright); font-weight: 500; font-style: italic; }
 </style>
 </head>
 <body>
@@ -289,11 +364,15 @@
   <a href="#rules" data-section="rules">Rules</a>
 </nav>
 
+<div class="leaf-layer" aria-hidden="true"><span style="left:4%;animation-duration:14s;animation-delay:-2s">🍂</span><span style="left:14%;animation-duration:18s;animation-delay:-9s">🍁</span><span style="left:25%;animation-duration:16s;animation-delay:-5s">🍂</span><span style="left:37%;animation-duration:20s;animation-delay:-12s">🍁</span><span style="left:48%;animation-duration:15s;animation-delay:-1s">🍂</span><span style="left:58%;animation-duration:19s;animation-delay:-7s">🍁</span><span style="left:69%;animation-duration:17s;animation-delay:-11s">🍂</span><span style="left:80%;animation-duration:21s;animation-delay:-4s">🍁</span><span style="left:90%;animation-duration:16s;animation-delay:-8s">🍂</span></div>
+
 <div class="wrap">
 
   <div id="dashboard" class="header-banner">
     <img src="header.png" alt="NFL Pick 'Em 2026 Season Leaderboard">
   </div>
+
+  <div class="holiday-banner">🦃 Happy Thanksgiving from the Pick 'Em crew 🍂<small>Turkey Day football — good luck this week!</small></div>
 
   <div class="star-divider">
     <svg viewBox="0 0 24 24" fill="#D4AF37"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2z"/></svg>
@@ -540,8 +619,24 @@
     }
   }
 
-  function pointsBadge(points, isFinal) {
-    if (!isFinal || points === '') return '<span class="points-badge pending">pending</span>';
+  // Live game info from ESPN (filled by loadGames). Lets "pending" picks show
+  // "live 17-14 Q3" or "awaiting final" instead of just "pending".
+  let liveGames = [];
+
+  function findLiveGame(label) {
+    const l = (label || '').toLowerCase();
+    return liveGames.find(function (g) {
+      return g.names.every(function (pair) { return pair.some(function (n) { return n && l.indexOf(n) !== -1; }); });
+    });
+  }
+
+  function pointsBadge(points, isFinal, label) {
+    if (!isFinal || points === '') {
+      const g = findLiveGame(label);
+      if (g && g.state === 'in') return '<span class="points-badge live">live ' + g.awayScore + '-' + g.homeScore + ' · ' + g.detail + '</span>';
+      if (g && g.state === 'post') return '<span class="points-badge awaiting">awaiting final</span>';
+      return '<span class="points-badge pending">pending</span>';
+    }
     const n = Number(points);
     const cls = n >= 15 ? 'high' : n > 0 ? 'mid' : 'zero';
     return '<span class="points-badge ' + cls + '">+' + n + '</span>';
@@ -580,7 +675,7 @@
           const winnerTeam = isFinal ? actual.substring(0, actual.lastIndexOf(' (')) : null;
           const pickClass = isFinal ? (pick === winnerTeam ? 'pick-correct' : 'pick-wrong') : '';
           html += '<div class="pick-game"><span class="matchup" title="' + label + '">' + label + '</span>' +
-            '<span class="pick-val"><span class="' + pickClass + '">' + pick + '</span> (' + predicted + ')' + pointsBadge(points, isFinal) + '</span></div>';
+            '<span class="pick-val"><span class="' + pickClass + '">' + pick + '</span> (' + predicted + ')' + pointsBadge(points, isFinal, label) + '</span></div>';
         }
         card.innerHTML = html;
         wrap.appendChild(card);
@@ -613,6 +708,13 @@
     const events = data.events || [];
     if (!events.length) { wrap.innerHTML = '<p class="empty-state">No games found.</p>'; return; }
     wrap.innerHTML = '';
+    liveGames = events.map(function (event) {
+      const c = event.competitions[0];
+      const h = c.competitors.find(function (x) { return x.homeAway === 'home'; });
+      const a = c.competitors.find(function (x) { return x.homeAway === 'away'; });
+      function nm(t) { return [t.team.displayName, t.team.shortDisplayName, t.team.name].filter(Boolean).map(function (x) { return x.toLowerCase(); }); }
+      return { names: [nm(a), nm(h)], state: c.status.type.state, detail: c.status.type.shortDetail, awayScore: a.score, homeScore: h.score };
+    });
     events.forEach(function (event) {
       const comp = event.competitions[0];
       const home = comp.competitors.find(function (c) { return c.homeAway === 'home'; });
@@ -666,8 +768,8 @@
   async function refreshAll() {
     await loadInsights();
     await Promise.all([loadStandings(), loadSeasonStandings()]);
+    await loadGames();
     loadPicksGrid();
-    loadGames();
   }
 
   // Scroll-spy nav highlighting
